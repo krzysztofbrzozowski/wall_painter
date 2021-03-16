@@ -21,8 +21,8 @@ if __name__ == '__main__':
             # Move carriage
             Carriage.move_to_point(**values)
             # Print out the LEFT and RIGHT HYPEN
-            logger['HYPEN'].info(f'{Carriage["HYP_L"]}[mm]|{int(round(MathCalc.steps_amt(Carriage["HYP_L"])))}[stp] && '
-                                 f'{Carriage["HYP_R"]}[mm]|{int(round(MathCalc.steps_amt(Carriage["HYP_R"])))}[stp]')
+            # logger['HYPEN'].info(f'{Carriage["HYP_L"]}[mm]|{int(round(MathCalc.steps_amt(Carriage["HYP_L"])))}[stp] && '
+            #                      f'{Carriage["HYP_R"]}[mm]|{int(round(MathCalc.steps_amt(Carriage["HYP_R"])))}[stp]')
 
         if not len(values):
             logger['P_INF'].info(f'** GCODE line was skipped **')
@@ -30,7 +30,7 @@ if __name__ == '__main__':
         GCODEParser.inc_gcode_line()
 
         logger['P_INF'].info(f'----------------------------- END -> GCODE LN: {ln} -----------------------------\n\n\n')
-        # time.sleep(Carriage['STP_TIM'] / 50000)
+
     Carriage.dis_mtrs()
 
 

@@ -1,7 +1,7 @@
 import sys
 
 from CONSTANTS import *
-import math
+from math import sqrt
 
 
 class MathCalc:
@@ -14,6 +14,10 @@ class MathCalc:
             sys.exit('Temporary not possible to achieve this GCODE point')
         hypotenuse = y / sinus_alpha
         return hypotenuse
+
+    @staticmethod
+    def get_hypotenuse2(x: int, y: int):
+        return math.sqrt(x ** 2 + y ** 2)
 
     @staticmethod
     def steps_amt(distance: float):

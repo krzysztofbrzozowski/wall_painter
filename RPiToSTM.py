@@ -8,8 +8,6 @@ if platform.system() == 'Darwin':
 if platform.system() == 'Linux':
     s_encoder = SerialEncoder('/dev/ttyS0', 115200)
 
-print('Hi I am inited')
-
 
 def verity_check(value):
     if 0 > value:

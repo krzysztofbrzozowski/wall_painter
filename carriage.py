@@ -8,7 +8,7 @@ from extruder import Extruder
 from loggers import *
 from CONSTANTS import *
 from trace_manager import TraceManager
-
+from prettytable import PrettyTable
 
 class Carriage:
 
@@ -27,6 +27,8 @@ class Carriage:
 
     MOT_L = Motor()
     MOT_R = Motor()
+    initial_tab = PrettyTable(['', 'MOT L', 'MOT R'])
+    summary_tab = PrettyTable(['', 'X', 'Y'])
 
     def __class_getitem__(cls, item):
         return cls.DATA[item]
@@ -38,8 +40,11 @@ class Carriage:
     @classmethod
     def init_calibration(cls):
         if START_POINT == 'middle':
-            cls.DATA['HYP_L'] = MathCalc.get_hypotenuse(WALL_X / 2, WALL_Y)
-            cls.DATA['HYP_R'] = MathCalc.get_hypotenuse(WALL_X / 2, WALL_Y)
+            # cls.DATA['HYP_L'] = MathCalc.get_hypotenuse(WALL_X / 2, WALL_Y)
+            # cls.DATA['HYP_R'] = MathCalc.get_hypotenuse(WALL_X / 2, WALL_Y)
+
+            cls.DATA['HYP_L'] = MathCalc.get_hypotenuse2(WALL_X / 2, WALL_Y)
+            cls.DATA['HYP_R'] = MathCalc.get_hypotenuse2(WALL_X / 2, WALL_Y)
 
         if START_POINT == 'begin':
             cls.DATA['HYP_L'] = WALL_Y
@@ -54,11 +59,15 @@ class Carriage:
 
             cls.DATA['CUR_POS_DIST_S'] = {'X': r_pos_x, 'Y': r_pos_y}
 
-            logger['P_INF'].info(f'I should be in position X:{x_set}[mm]|{x_set / STP_DST}[stp],'
-                                 f' Y:{y_set}[mm]|{y_set / STP_DST}[stp]')
+            cls.summary_tab.add_row(['DESIRED POSITION', f'{x_set}|{x_set / STP_DST}', f'{y_set}|{y_set / STP_DST}'])
+            cls.summary_tab.add_row(['REAL POSITION', f'{r_pos_x * STP_DST}|{r_pos_x}', f'{r_pos_y * STP_DST}|{r_pos_y}'])
 
-            logger['P_INF'].info(f'I really am in position X: {r_pos_x * STP_DST}[mm]|{r_pos_x}[stp], '
-                                 f'Y: {r_pos_y * STP_DST}[mm]|{r_pos_y}[stp]\n')
+            # logger['P_INF'].info(f'I should be in position X:{x_set}[mm]|{x_set / STP_DST}[stp],'
+            #                      f' Y:{y_set}[mm]|{y_set / STP_DST}[stp]')
+            #
+            # logger['P_INF'].info(f'I really am in position X: {r_pos_x * STP_DST}[mm]|{r_pos_x}[stp], '
+            #                      f'Y: {r_pos_y * STP_DST}[mm]|{r_pos_y}[stp]\n')
+            # print(tab)
 
     @classmethod
     def get_position(cls, mes: str):
@@ -102,6 +111,12 @@ class Carriage:
 
             cls.MOT_L.set_pos(stps_l)
             cls.MOT_R.set_pos(stps_r)
+
+            cls.summary_tab.add_row(['HYPEN',
+                                     f'{cls.DATA["HYP_L"]}|{int(round(MathCalc.steps_amt(cls.DATA["HYP_L"])))}',
+                                     f'{cls.DATA["HYP_R"]}|{int(round(MathCalc.steps_amt(cls.DATA["HYP_R"])))}'])
+            logger['P_INF'].info(f'\r\n{cls.summary_tab}')
+            cls.summary_tab.clear_rows()
             return 0
 
         if kwargs['X'] > -1:
@@ -123,19 +138,25 @@ class Carriage:
         else:
             sys.exit('Value of GCODE can not be negative')
 
-        hyp_diff_l = abs(MathCalc.get_hypotenuse(x_lt, y_lo)) - cls.DATA['HYP_L']
-        hyp_diff_r = abs(MathCalc.get_hypotenuse(x_rt, y_lo)) - cls.DATA['HYP_R']
+        hyp_diff_l = abs(MathCalc.get_hypotenuse2(x_lt, y_lo)) - cls.DATA['HYP_L']
+        hyp_diff_r = abs(MathCalc.get_hypotenuse2(x_rt, y_lo)) - cls.DATA['HYP_R']
 
         # Hypotenuses calc (output value in the same unit as WALL_X and WALL_Y -> mm for now)
-        cls.DATA['HYP_L'] = abs(MathCalc.get_hypotenuse(x_lt, y_lo))
-        cls.DATA['HYP_R'] = abs(MathCalc.get_hypotenuse(x_rt, y_lo))
+        cls.DATA['HYP_L'] = abs(MathCalc.get_hypotenuse2(x_lt, y_lo))
+        cls.DATA['HYP_R'] = abs(MathCalc.get_hypotenuse2(x_rt, y_lo))
 
         cls.DATA['STPS_AMT']['L'] = int(round(MathCalc.steps_amt(hyp_diff_l)))
         cls.DATA['STPS_AMT']['R'] = int(round(MathCalc.steps_amt(hyp_diff_r)))
 
-        logger['P_INF'].info(f"I have to move: "
-                             f"MOT_L: {hyp_diff_l}[mm]|{cls.DATA['STPS_AMT']['L']}[steps] && "
-                             f"MOT_R: {hyp_diff_r}[mm]|{cls.DATA['STPS_AMT']['R']}[steps]\n")
+        cls.initial_tab.add_row(['MOV NEEDED',
+                                 f"{hyp_diff_l}|{cls.DATA['STPS_AMT']['L']}",
+                                 f"{hyp_diff_r}|{cls.DATA['STPS_AMT']['R']}"])
+        logger['P_INF'].info(f'\r\n{cls.initial_tab}')
+        cls.initial_tab.clear_rows()
+
+        # logger['P_INF'].info(f"I have to move: "
+        #                      f"MOT_L: {hyp_diff_l}[mm]|{cls.DATA['STPS_AMT']['L']}[steps] && "
+        #                      f"MOT_R: {hyp_diff_r}[mm]|{cls.DATA['STPS_AMT']['R']}[steps]\n")
 
         # Steps time calc
         cls.DATA['STPS_TIM'] = max(MathCalc.steps_tim(abs(amt)) for amt in cls.DATA['STPS_AMT'].values())
@@ -149,9 +170,16 @@ class Carriage:
             cls.MOT_R.mov_mtr(cls.DATA['STPS_AMT']['R'], cls.DATA['STPS_TIM'])
             time.sleep(cls.DATA['STPS_TIM'])
 
-        print(' ')
-        logger['P_INF'].info(f'END POSITIONS FOR: @MOT_L -> {cls.MOT_L.get_pos()}[stp] && '
-                             f'@MOT_R -> {cls.MOT_R.get_pos()}[stp]\n')
+        # print(' ')
+        # logger['P_INF'].info(f'END POSITIONS FOR: @MOT_L -> {cls.MOT_L.get_pos()}[stp] && '
+        #                      f'@MOT_R -> {cls.MOT_R.get_pos()}[stp]\n')
 
         cls.set_position('stp', kwargs['X'], kwargs['Y'], cls.MOT_L.get_pos(), cls.MOT_R.get_pos())
+
+        cls.summary_tab.add_row(['HYPEN',
+                                 f"{cls.DATA['HYP_L']}|{int(round(MathCalc.steps_amt(cls.DATA['HYP_L'])))}",
+                                 f"{cls.DATA['HYP_R']}|{int(round(MathCalc.steps_amt(cls.DATA['HYP_R'])))}"])
+
+        logger['P_INF'].info(f'\r\n{cls.summary_tab}')
+        cls.summary_tab.clear_rows()
         return 0

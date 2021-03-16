@@ -82,7 +82,7 @@ logger = {'GCODE': LoggerManager().get_logger('GCODE'),
 
 logger['GCODE'].setLevel(level=logging.DEBUG)
 logger['HYPEN'].setLevel(level=logging.DEBUG)
-logger['P_INF'].setLevel(level=logging.DEBUG)
+logger['P_INF'].setLevel(level=logging.INFO)
 
 logger['STP_INFO'].setLevel(level=logging.DEBUG)
 logger['TIM_INFO'].setLevel(level=logging.DEBUG)
