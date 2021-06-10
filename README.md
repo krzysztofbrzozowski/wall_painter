@@ -25,6 +25,7 @@ CONSTANTS.py: all necessary settings for the app
 
 TODO LIST:
 -
+* Do working PWM servo running
 * continue with README.md
 * fix the start point - now it is 'begin' but it is not possible to achieve this in real word
 
